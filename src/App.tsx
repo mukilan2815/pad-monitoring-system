@@ -41,8 +41,8 @@ const App = () => (
                 <Route path="/monitoring" element={<Monitoring />} />
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/profile" element={<PatientProfile />} />
-                <Route path="/health-data" element={<Navigate to="/analytics" />} />
-                <Route path="/settings" element={<Navigate to="/profile" />} />
+                {/* <Route path="/health-data" element={<Navigate to="/analytics" />} /> */}
+                {/* <Route path="/settings" element={<Navigate to="/profile" />} /> */}
               </Route>
               
               <Route path="*" element={<NotFound />} />

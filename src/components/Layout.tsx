@@ -127,13 +127,13 @@ const Layout: React.FC = () => {
               active={location.pathname === "/analytics"} 
               onClick={closeSidebarOnMobile}
             />
-            <NavItem 
+            {/* <NavItem 
               icon={Heart} 
               label="Health Data" 
               to="/health-data" 
               active={location.pathname === "/health-data"} 
               onClick={closeSidebarOnMobile}
-            />
+            /> */}
           </nav>
 
           <Separator className="my-4" />
@@ -147,13 +147,13 @@ const Layout: React.FC = () => {
               active={location.pathname === "/profile"} 
               onClick={closeSidebarOnMobile}
             />
-            <NavItem 
+            {/* <NavItem 
               icon={Settings} 
               label="Settings" 
               to="/settings" 
               active={location.pathname === "/settings"} 
               onClick={closeSidebarOnMobile}
-            />
+            /> */}
           </nav>
 
           {/* Sensor Simulation */}
