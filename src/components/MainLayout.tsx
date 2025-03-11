@@ -32,63 +32,63 @@ const MainLayout: React.FC = () => {
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 p-4 bg-sidebar border-r border-sidebar-border">
-        <div className="flex items-center gap-2 mb-8">
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-            <Activity className="w-5 h-5 text-white" />
+        <aside className="hidden md:flex flex-col w-64 p-4 bg-sidebar border-r border-sidebar-border">
+          <div className="flex items-center gap-2 mb-8">
+            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+              <Activity className="w-5 h-5 text-white" />
+            </div>
+            <div className="font-bold text-lg">PAD Monitor</div>
           </div>
-          <div className="font-bold text-lg">PAD Monitor</div>
-        </div>
 
-        <nav className="space-y-1 flex-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                  isActive 
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground" 
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-                )}
-              >
-                <Icon className="w-5 h-5" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
+          <nav className="space-y-1 flex-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.path;
+              
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                    isActive 
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground" 
+                      : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+                  )}
+                >
+                  <Icon className="w-5 h-5" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
 
-        <div className="pt-4 border-t border-sidebar-border space-y-4">
-          <div className="px-3 py-2">
-            <div className="text-sm font-medium">Sensor Simulation</div>
-            <div className="flex items-center mt-2">
-              <Button
-                variant={isSimulating ? "destructive" : "default"}
-                size="sm"
-                className="w-full"
-                onClick={() => setIsSimulating(!isSimulating)}
-              >
-                {isSimulating ? "Stop Simulation" : "Start Simulation"}
+          <div className="pt-4 border-t border-sidebar-border space-y-4">
+            <div className="px-3 py-2">
+              <div className="text-sm font-medium">Sensor Simulation</div>
+              <div className="flex items-center mt-2">
+                <Button
+                  variant={isSimulating ? "destructive" : "default"}
+                  size="sm"
+                  className="w-full"
+                  onClick={() => setIsSimulating(!isSimulating)}
+                >
+                  {isSimulating ? "Stop Simulation" : "Start Simulation"}
+                </Button>
+              </div>
+            </div>
+
+            <div className="px-3 py-2 flex items-center">
+              <div className="flex-1">
+                <div className="text-sm font-medium">{currentUser?.displayName || 'User'}</div>
+                <div className="text-xs text-sidebar-foreground/60">{currentUser?.email}</div>
+              </div>
+              <Button variant="ghost" size="icon" onClick={handleLogout}>
+                <LogOut className="w-4 h-4" />
               </Button>
             </div>
           </div>
-
-          <div className="px-3 py-2 flex items-center">
-            <div className="flex-1">
-              <div className="text-sm font-medium">{currentUser?.displayName || 'User'}</div>
-              <div className="text-xs text-sidebar-foreground/60">{currentUser?.email}</div>
-            </div>
-            <Button variant="ghost" size="icon" onClick={handleLogout}>
-              <LogOut className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </aside>
+        </aside>
 
       {/* Mobile header */}
       <div className="fixed top-0 left-0 right-0 md:hidden flex items-center justify-between p-4 bg-background z-10 border-b">

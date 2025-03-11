@@ -1,6 +1,5 @@
-
 import { useEffect } from "react";
-import Layout from "@/components/Layout";
+// import Layout from "@/components/Layout";
 import { SensorCard } from "@/components/SensorCard";
 import { MetricChart } from "@/components/MetricChart";
 import { PadRiskGauge } from "@/components/PadRiskGauge";
@@ -11,24 +10,24 @@ import { InfoTooltip } from "@/components/InfoTooltip";
 import { ExportDataDialog } from "@/components/ExportDataDialog";
 import { ConnectDoctorDialog } from "@/components/ConnectDoctorDialog";
 import { MetricsGlossary } from "@/components/MetricsGlossary";
-import { 
+import {
   Thermometer,
   Activity,
   ArrowUp,
   ArrowDown,
   Play,
   Square,
-  Heart
+  Heart,
 } from "lucide-react";
 
 const Monitoring = () => {
-  const { 
-    readings, 
-    latestReading, 
+  const {
+    readings,
+    latestReading,
     simulateReading,
     isSimulating,
     setIsSimulating,
-    loading
+    loading,
   } = useSensorData();
 
   useEffect(() => {
@@ -39,7 +38,10 @@ const Monitoring = () => {
   }, [readings.length, isSimulating, setIsSimulating]);
 
   // Function to get sensor status
-  const getSensorStatus = (value: number, type: "bloodFlow" | "temperature" | "pressure") => {
+  const getSensorStatus = (
+    value: number,
+    type: "bloodFlow" | "temperature" | "pressure"
+  ) => {
     if (type === "bloodFlow") {
       if (value < 50) return "critical";
       if (value < 70) return "warning";
@@ -57,7 +59,10 @@ const Monitoring = () => {
   };
 
   // Function to get sensor status text
-  const getStatusText = (value: number, type: "bloodFlow" | "temperature" | "pressure") => {
+  const getStatusText = (
+    value: number,
+    type: "bloodFlow" | "temperature" | "pressure"
+  ) => {
     if (type === "bloodFlow") {
       if (value < 50) return "Critical";
       if (value < 70) return "Warning";
@@ -84,7 +89,8 @@ const Monitoring = () => {
   };
 
   // Get the previous reading if available
-  const previousReading = readings.length > 1 ? readings[readings.length - 2] : undefined;
+  const previousReading =
+    readings.length > 1 ? readings[readings.length - 2] : undefined;
 
   // Toggle simulation
   const toggleSimulation = () => {
@@ -92,19 +98,20 @@ const Monitoring = () => {
   };
 
   return (
-    <Layout>
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Live Monitoring</h1>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Live Monitoring
+            </h1>
             <p className="text-muted-foreground">
               Real-time sensor data from your PAD monitoring device
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button 
-              onClick={toggleSimulation} 
+            <Button
+              onClick={toggleSimulation}
               variant={isSimulating ? "destructive" : "default"}
               className="shadow-sm transition-all"
             >
@@ -143,7 +150,9 @@ const Monitoring = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
                   <div className="lg:col-span-3">
                     <div className="flex items-center gap-2 mb-2">
-                      <h3 className="text-lg font-medium">PAD Risk Assessment</h3>
+                      <h3 className="text-lg font-medium">
+                        PAD Risk Assessment
+                      </h3>
                       <InfoTooltip content="This gauge shows your current risk level for Peripheral Artery Disease. Lower scores are better. The score is calculated from your blood flow, temperature, and pressure readings." />
                     </div>
                     <PadRiskGauge value={latestReading.padRiskScore} />
@@ -155,10 +164,30 @@ const Monitoring = () => {
                     </div>
                     <SensorCard
                       title="Heart Health"
-                      value={latestReading.padRiskScore < 25 ? "Healthy" : latestReading.padRiskScore < 50 ? "Monitor" : latestReading.padRiskScore < 75 ? "At Risk" : "Severe Risk"}
+                      value={
+                        latestReading.padRiskScore < 25
+                          ? "Healthy"
+                          : latestReading.padRiskScore < 50
+                          ? "Monitor"
+                          : latestReading.padRiskScore < 75
+                          ? "At Risk"
+                          : "Severe Risk"
+                      }
                       icon={<Heart />}
-                      status={latestReading.padRiskScore < 25 ? "normal" : latestReading.padRiskScore < 50 ? "normal" : latestReading.padRiskScore < 75 ? "warning" : "critical"}
-                      statusText={latestReading.padRiskScore < 50 ? "Maintain healthy habits" : "Consult healthcare provider"}
+                      status={
+                        latestReading.padRiskScore < 25
+                          ? "normal"
+                          : latestReading.padRiskScore < 50
+                          ? "normal"
+                          : latestReading.padRiskScore < 75
+                          ? "warning"
+                          : "critical"
+                      }
+                      statusText={
+                        latestReading.padRiskScore < 50
+                          ? "Maintain healthy habits"
+                          : "Consult healthcare provider"
+                      }
                       className="h-full"
                     />
                   </div>
@@ -176,10 +205,19 @@ const Monitoring = () => {
                       value={latestReading.bloodFlow.toFixed(1)}
                       unit="bpm"
                       icon={<Activity />}
-                      trend={getTrend(latestReading.bloodFlow, previousReading?.bloodFlow)}
+                      trend={getTrend(
+                        latestReading.bloodFlow,
+                        previousReading?.bloodFlow
+                      )}
                       description="Peripheral blood flow velocity"
-                      status={getSensorStatus(latestReading.bloodFlow, "bloodFlow")}
-                      statusText={getStatusText(latestReading.bloodFlow, "bloodFlow")}
+                      status={getSensorStatus(
+                        latestReading.bloodFlow,
+                        "bloodFlow"
+                      )}
+                      statusText={getStatusText(
+                        latestReading.bloodFlow,
+                        "bloodFlow"
+                      )}
                     />
                   </div>
                   <div>
@@ -192,10 +230,19 @@ const Monitoring = () => {
                       value={latestReading.temperature.toFixed(1)}
                       unit="°C"
                       icon={<Thermometer />}
-                      trend={getTrend(latestReading.temperature, previousReading?.temperature)}
+                      trend={getTrend(
+                        latestReading.temperature,
+                        previousReading?.temperature
+                      )}
                       description="Skin surface temperature"
-                      status={getSensorStatus(latestReading.temperature, "temperature")}
-                      statusText={getStatusText(latestReading.temperature, "temperature")}
+                      status={getSensorStatus(
+                        latestReading.temperature,
+                        "temperature"
+                      )}
+                      statusText={getStatusText(
+                        latestReading.temperature,
+                        "temperature"
+                      )}
                     />
                   </div>
                   <div>
@@ -207,11 +254,26 @@ const Monitoring = () => {
                       title="Pressure"
                       value={latestReading.pressure.toFixed(0)}
                       unit="mmHg"
-                      icon={latestReading.pressure > 120 ? <ArrowUp /> : <ArrowDown />}
-                      trend={getTrend(latestReading.pressure, previousReading?.pressure)}
+                      icon={
+                        latestReading.pressure > 120 ? (
+                          <ArrowUp />
+                        ) : (
+                          <ArrowDown />
+                        )
+                      }
+                      trend={getTrend(
+                        latestReading.pressure,
+                        previousReading?.pressure
+                      )}
                       description="Lower limb pressure"
-                      status={getSensorStatus(latestReading.pressure, "pressure")}
-                      statusText={getStatusText(latestReading.pressure, "pressure")}
+                      status={getSensorStatus(
+                        latestReading.pressure,
+                        "pressure"
+                      )}
+                      statusText={getStatusText(
+                        latestReading.pressure,
+                        "pressure"
+                      )}
                     />
                   </div>
                 </div>
@@ -247,8 +309,8 @@ const Monitoring = () => {
             ) : (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">
-                  {loading 
-                    ? "Loading sensor data..." 
+                  {loading
+                    ? "Loading sensor data..."
                     : "No sensor data available. Start the simulation to generate data."}
                 </p>
               </div>
@@ -262,7 +324,9 @@ const Monitoring = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <h3 className="text-lg font-medium">Blood Flow Over Time</h3>
+                      <h3 className="text-lg font-medium">
+                        Blood Flow Over Time
+                      </h3>
                       <InfoTooltip content="This chart shows your blood flow readings over time. Higher values indicate better circulation. Watch for consistently low readings or downward trends." />
                     </div>
                     <MetricChart
@@ -276,7 +340,9 @@ const Monitoring = () => {
                   </div>
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <h3 className="text-lg font-medium">PAD Risk Score Trend</h3>
+                      <h3 className="text-lg font-medium">
+                        PAD Risk Score Trend
+                      </h3>
                       <InfoTooltip content="This chart shows your PAD risk score over time. Watch for upward trends, which may indicate worsening condition." />
                     </div>
                     <MetricChart
@@ -292,7 +358,9 @@ const Monitoring = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <h3 className="text-lg font-medium">Temperature Variation</h3>
+                      <h3 className="text-lg font-medium">
+                        Temperature Variation
+                      </h3>
                       <InfoTooltip content="This chart shows your skin temperature over time. Normal body temperature is around 36.5°C. Consistently low temperatures in your limbs can indicate poor circulation." />
                     </div>
                     <MetricChart
@@ -325,8 +393,8 @@ const Monitoring = () => {
             ) : (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">
-                  {loading 
-                    ? "Loading chart data..." 
+                  {loading
+                    ? "Loading chart data..."
                     : "No data available for charts. Start the simulation to generate data."}
                 </p>
               </div>
@@ -334,7 +402,6 @@ const Monitoring = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </Layout>
   );
 };
 
