@@ -303,7 +303,7 @@ const Analytics = () => {
                       dataKey="padRiskScore" 
                       color="#ef4444" 
                       unit="" 
-                      name="Risk Score"
+                      title="Risk Score"
                       referenceRange={{ min: 0, max: 30, dangerThreshold: 70 }}
                     />
                   </div>
@@ -327,7 +327,7 @@ const Analytics = () => {
                       dataKey="bloodFlow" 
                       color="#3b82f6" 
                       unit="%" 
-                      name="Blood Flow"
+                      title="Blood Flow"
                       referenceRange={{ min: 70, max: 100 }}
                     />
                   </div>
@@ -351,7 +351,7 @@ const Analytics = () => {
                       dataKey="temperature" 
                       color="#ef4444" 
                       unit="°C" 
-                      name="Temperature"
+                      title="Temperature"
                       referenceRange={{ min: 36, max: 37 }}
                     />
                   </div>
@@ -375,7 +375,7 @@ const Analytics = () => {
                       dataKey="pressure" 
                       color="#10b981" 
                       unit="mmHg" 
-                      name="Pressure"
+                      title="Pressure"
                       referenceRange={{ min: 80, max: 120 }}
                     />
                   </div>

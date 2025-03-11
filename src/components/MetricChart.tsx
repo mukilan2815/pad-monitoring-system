@@ -5,14 +5,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { format } from "date-fns";
 import { SensorReading } from "@/contexts/SensorDataContext";
 
+interface ReferenceRange {
+  min: number;
+  max: number;
+  dangerThreshold?: number;
+}
+
 interface MetricChartProps {
-  title: string;
+  title?: string;
   description?: string;
   data: SensorReading[];
   dataKey: string;
   color: string;
   valueFormatter?: (value: number) => string;
   unit?: string;
+  referenceRange?: ReferenceRange;
 }
 
 const CustomTooltip = ({ active, payload, label, valueFormatter, unit }: TooltipProps<number, string> & { valueFormatter?: (value: number) => string, unit?: string }) => {
@@ -42,7 +49,8 @@ export function MetricChart({
   dataKey,
   color,
   valueFormatter,
-  unit
+  unit,
+  referenceRange
 }: MetricChartProps) {
   const [chartData, setChartData] = useState<any[]>([]);
 
@@ -74,7 +82,7 @@ export function MetricChart({
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-4">
-        <CardTitle>{title}</CardTitle>
+        {title && <CardTitle>{title}</CardTitle>}
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
       <CardContent className="p-0">

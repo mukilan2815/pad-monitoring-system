@@ -262,7 +262,7 @@ const Dashboard = () => {
                   dataKey="bloodFlow" 
                   color="#3b82f6" 
                   unit="%" 
-                  name="Blood Flow"
+                  title="Blood Flow"
                   referenceRange={{ min: 70, max: 100 }}
                 />
               </div>
@@ -297,7 +297,7 @@ const Dashboard = () => {
                   dataKey="padRiskScore" 
                   color="#ef4444" 
                   unit="" 
-                  name="Risk Score"
+                  title="Risk Score"
                   referenceRange={{ min: 0, max: 30, dangerThreshold: 70 }}
                 />
               </div>
