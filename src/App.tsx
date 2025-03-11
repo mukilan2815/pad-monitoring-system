@@ -19,7 +19,7 @@ import NotFound from "./pages/NotFound";
 
 // Components
 import { PrivateRoute } from "./components/PrivateRoute";
-import MainLayout from "./components/MainLayout";
+import Layout from "./components/Layout";  // Changed from MainLayout to Layout
 
 const queryClient = new QueryClient();
 
@@ -36,11 +36,13 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<SignUp />} />
               
-              <Route element={<PrivateRoute><MainLayout /></PrivateRoute>}>
+              <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/monitoring" element={<Monitoring />} />
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/profile" element={<PatientProfile />} />
+                <Route path="/health-data" element={<Navigate to="/analytics" />} />
+                <Route path="/settings" element={<Navigate to="/profile" />} />
               </Route>
               
               <Route path="*" element={<NotFound />} />

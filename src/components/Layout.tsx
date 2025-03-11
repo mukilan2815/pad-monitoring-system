@@ -1,7 +1,8 @@
 
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSensorData } from "@/contexts/SensorDataContext";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { 
@@ -51,15 +52,18 @@ const NavItem: React.FC<NavItemProps> = ({
   );
 };
 
-const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const Layout: React.FC = () => {
   const { currentUser, logOut } = useAuth();
+  const { isSimulating, setIsSimulating } = useSensorData();
   const location = useLocation();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
 
   const handleLogout = async () => {
     try {
       await logOut();
+      navigate('/login');
     } catch (error) {
       console.error("Failed to log out", error);
     }
@@ -105,8 +109,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <NavItem 
               icon={Home} 
               label="Overview" 
-              to="/" 
-              active={location.pathname === "/"} 
+              to="/dashboard" 
+              active={location.pathname === "/dashboard"} 
               onClick={closeSidebarOnMobile}
             />
             <NavItem 
@@ -152,6 +156,23 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             />
           </nav>
 
+          {/* Sensor Simulation */}
+          <div className="pt-4 mt-4 border-t border-sidebar-border">
+            <div className="px-3 py-2">
+              <div className="text-sm font-medium">Sensor Simulation</div>
+              <div className="flex items-center mt-2">
+                <Button
+                  variant={isSimulating ? "destructive" : "default"}
+                  size="sm"
+                  className="w-full"
+                  onClick={() => setIsSimulating(!isSimulating)}
+                >
+                  {isSimulating ? "Stop Simulation" : "Start Simulation"}
+                </Button>
+              </div>
+            </div>
+          </div>
+
           <div className="mt-auto pt-4">
             {currentUser && (
               <>
@@ -195,7 +216,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
         {/* Page Content */}
         <main className="flex-1 p-4 md:p-6 overflow-auto">
-          {children}
+          <Outlet />
         </main>
       </div>
 
