@@ -135,7 +135,7 @@ const PatientProfile = () => {
                         id="name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="John Doe"
+                        placeholder="Mukilan T"
                       />
                     </div>
                     <div className="space-y-2">
@@ -145,7 +145,7 @@ const PatientProfile = () => {
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="john@example.com"
+                        placeholder="mukilan@gmail.com"
                       />
                     </div>
                   </div>
@@ -157,7 +157,7 @@ const PatientProfile = () => {
                         id="phone"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        placeholder="+1 (555) 123-4567"
+                        placeholder="+91 74483 59935  "
                       />
                     </div>
                     <div className="space-y-2">
@@ -166,7 +166,7 @@ const PatientProfile = () => {
                         id="emergency"
                         value={emergencyContact}
                         onChange={(e) => setEmergencyContact(e.target.value)}
-                        placeholder="Name: Jane Doe, Phone: +1 (555) 987-6543"
+                        placeholder="Name: Mukilan T, Phone: 7448359935"
                       />
                     </div>
                   </div>
@@ -177,7 +177,7 @@ const PatientProfile = () => {
                       id="address"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      placeholder="123 Main St, Anytown, USA"
+                      placeholder="Address"
                       rows={3}
                     />
                   </div>
