@@ -1,157 +1,173 @@
 
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Heart, Activity, BarChart2, ChevronRight } from "lucide-react";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Activity, BarChart3, Heart, Stethoscope } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
-const LandingPage = () => {
-  const { currentUser } = useAuth();
+const Index = () => {
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // If user is already logged in, redirect to monitoring page
-    if (currentUser) {
-      navigate("/monitoring");
-    }
-  }, [currentUser, navigate]);
+  const { currentUser } = useAuth();
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-grid"></div>
-        <div className="relative max-w-screen-xl mx-auto px-4 py-28 sm:px-6 lg:px-8 flex flex-col items-center text-center">
-          <div className="animate-float">
-            <div className="relative w-16 h-16 md:w-20 md:h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Heart className="h-8 w-8 md:h-10 md:w-10 text-primary animate-pulse-slow" />
+    <div className="flex flex-col min-h-screen">
+      {/* Header */}
+      <header className="py-4 px-6 border-b bg-white dark:bg-sidebar">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+              <Activity className="w-5 h-5 text-white" />
             </div>
+            <div className="font-bold text-lg">PAD Monitor</div>
           </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight animate-fade-in">
-            Early Detection and Precision<br />Management for <span className="text-primary">PAD</span>
+          <div className="flex gap-2">
+            {currentUser ? (
+              <Button onClick={() => navigate('/dashboard')}>
+                Go to Dashboard
+              </Button>
+            ) : (
+              <>
+                <Button variant="ghost" onClick={() => navigate('/login')}>
+                  Log In
+                </Button>
+                <Button onClick={() => navigate('/signup')}>
+                  Sign Up
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <section className="py-20 px-6 bg-grid">
+        <div className="max-w-7xl mx-auto text-center">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            Early Detection & Precision Management for PAD
           </h1>
-          <p className="mt-6 max-w-2xl text-lg md:text-xl text-muted-foreground animate-slide-in">
-            Advanced monitoring system for Peripheral Artery Disease with real-time analytics and early detection capabilities.
+          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+            Advanced monitoring for Peripheral Artery Disease using smart sensors
+            and AI analytics to detect issues before they become critical.
           </p>
-          <div className="mt-12 flex flex-col sm:flex-row gap-4 animate-slide-in">
-            <Button size="lg" onClick={() => navigate("/signup")}>
-              Get Started <ArrowRight className="ml-2 h-4 w-4" />
+          <div className="flex flex-wrap gap-4 justify-center">
+            <Button size="lg" className="gap-2" onClick={() => navigate(currentUser ? '/dashboard' : '/signup')}>
+              {currentUser ? 'Go to Dashboard' : 'Get Started'}
+              <Activity className="w-4 h-4" />
             </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate("/login")}>
-              Sign In
+            <Button size="lg" variant="outline" className="gap-2" onClick={() => navigate('/monitoring')}>
+              See How It Works
+              <BarChart3 className="w-4 h-4" />
             </Button>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-secondary/50">
-        <div className="max-w-screen-xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold tracking-tight">
-              Comprehensive PAD Monitoring
-            </h2>
-            <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-              Our system provides advanced monitoring capabilities to detect PAD symptoms early and manage them effectively.
-            </p>
-          </div>
-
+      <section className="py-16 px-6 bg-muted/30">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-12">How Our System Works</h2>
+          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="glassmorphism border-0">
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center text-center">
-                  <div className="p-3 rounded-full bg-primary/10 mb-4">
-                    <Activity className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">Real-time Monitoring</h3>
-                  <p className="text-muted-foreground">
-                    Continuous monitoring of blood flow, temperature, and pressure using advanced sensors.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="glassmorphism border-0">
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center text-center">
-                  <div className="p-3 rounded-full bg-primary/10 mb-4">
-                    <BarChart2 className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">AI-Powered Analysis</h3>
-                  <p className="text-muted-foreground">
-                    Advanced algorithms analyze data patterns to predict PAD progression 6 months earlier than traditional methods.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="glassmorphism border-0">
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center text-center">
-                  <div className="p-3 rounded-full bg-primary/10 mb-4">
-                    <Heart className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">Health Insights</h3>
-                  <p className="text-muted-foreground">
-                    Personalized risk assessments and recommendations based on your unique vascular health profile.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            {[
+              {
+                icon: <Stethoscope className="w-10 h-10 text-primary" />,
+                title: "Smart Compression Socks",
+                description: "Equipped with PPG, temperature, pressure, and motion sensors to monitor vascular health in real-time."
+              },
+              {
+                icon: <BarChart3 className="w-10 h-10 text-primary" />,
+                title: "AI-Powered Analytics",
+                description: "Our algorithms analyze blood flow patterns and vascular metrics to predict PAD progression up to 6 months earlier."
+              },
+              {
+                icon: <Heart className="w-10 h-10 text-primary" />,
+                title: "Healthcare Integration",
+                description: "Seamlessly connects with EHRs and provides clinicians with actionable insights and recommendations."
+              }
+            ].map((feature, index) => (
+              <div key={index} className="bg-background p-6 rounded-lg border sensor-card">
+                <div className="mb-4">{feature.icon}</div>
+                <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
+                <p className="text-muted-foreground">{feature.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-screen-xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="flex flex-col items-center p-6 text-center">
-              <p className="text-4xl font-bold text-primary">236M+</p>
-              <p className="mt-2 text-muted-foreground">People affected by PAD worldwide</p>
-            </div>
-            <div className="flex flex-col items-center p-6 text-center">
-              <p className="text-4xl font-bold text-primary">75%</p>
-              <p className="mt-2 text-muted-foreground">Of cases remain undiagnosed</p>
-            </div>
-            <div className="flex flex-col items-center p-6 text-center">
-              <p className="text-4xl font-bold text-primary">3x</p>
-              <p className="mt-2 text-muted-foreground">Higher amputation risk with late detection</p>
-            </div>
+      {/* Problem Statement */}
+      <section className="py-16 px-6 bg-background">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-4">Why Early Detection Matters</h2>
+          <p className="text-center text-muted-foreground max-w-3xl mx-auto mb-12">
+            PAD affects millions worldwide but is frequently underdiagnosed until complications arise.
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              {
+                stat: "236M+",
+                title: "Global Prevalence",
+                description: "People worldwide living with PAD, with higher rates in those aged 60+"
+              },
+              {
+                stat: "75%",
+                title: "Underdiagnosis",
+                description: "Of PAD cases are not identified early, increasing amputation risks threefold"
+              },
+              {
+                stat: "60%+",
+                title: "Quality of Life",
+                description: "Of PAD patients experience mobility issues due to delayed detection"
+              },
+            ].map((item, index) => (
+              <div key={index} className="p-6 border rounded-lg bg-muted/20">
+                <div className="text-3xl font-bold text-primary mb-2">{item.stat}</div>
+                <h3 className="text-xl font-bold mb-2">{item.title}</h3>
+                <p className="text-muted-foreground">{item.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-primary/5">
-        <div className="max-w-screen-xl mx-auto flex flex-col items-center text-center">
-          <h2 className="text-3xl font-bold tracking-tight">
-            Ready to start monitoring your vascular health?
-          </h2>
-          <p className="mt-4 text-lg text-muted-foreground max-w-2xl">
-            Join thousands of users who are taking control of their PAD management with our advanced monitoring system.
+      <section className="py-16 px-6 bg-primary text-primary-foreground">
+        <div className="max-w-7xl mx-auto text-center">
+          <h2 className="text-3xl font-bold mb-4">Ready to Experience the Future of PAD Management?</h2>
+          <p className="text-xl opacity-90 max-w-3xl mx-auto mb-8">
+            Join our network of healthcare providers and patients using advanced monitoring to prevent complications.
           </p>
-          <Button size="lg" className="mt-8" onClick={() => navigate("/signup")}>
-            Get Started <ChevronRight className="ml-2 h-4 w-4" />
+          <Button 
+            size="lg" 
+            variant="secondary" 
+            className="gap-2"
+            onClick={() => navigate(currentUser ? '/dashboard' : '/signup')}
+          >
+            {currentUser ? 'Access Your Dashboard' : 'Sign Up Now'}
+            <Activity className="w-4 h-4" />
           </Button>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-4 border-t">
-        <div className="max-w-screen-xl mx-auto flex flex-col md:flex-row justify-between items-center">
-          <div className="flex items-center mb-4 md:mb-0">
-            <Heart className="h-5 w-5 text-primary mr-2" />
-            <span className="font-semibold">PADguard</span>
+      <footer className="py-8 px-6 border-t">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="flex items-center gap-2 mb-4 md:mb-0">
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                <Activity className="w-5 h-5 text-white" />
+              </div>
+              <div className="font-bold">PAD Monitor</div>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} PAD Monitor. All rights reserved.
+            </div>
           </div>
-          <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} PADguard. All rights reserved.
-          </p>
         </div>
       </footer>
     </div>
   );
 };
 
-export default LandingPage;
+export default Index;

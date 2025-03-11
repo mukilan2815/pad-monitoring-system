@@ -1,303 +1,436 @@
 
-import { useMemo } from "react";
-import Layout from "@/components/Layout";
-import { MetricChart } from "@/components/MetricChart";
-import { PadRiskGauge } from "@/components/PadRiskGauge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSensorData } from "@/contexts/SensorDataContext";
-import { Separator } from "@/components/ui/separator";
-import { 
-  Thermometer,
-  Activity,
-  ArrowUp, 
-  ArrowDown,
-  AlertTriangle
-} from "lucide-react";
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useSensorData } from '@/contexts/SensorDataContext';
+import { MetricChart } from '@/components/MetricChart';
+import { Button } from '@/components/ui/button';
+import { format } from 'date-fns';
+import { Activity, ArrowDownToLine, BarChart3, ThermometerIcon, Waves } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const Analytics = () => {
-  const { readings, latestReading, loading } = useSensorData();
-
-  // Calculate analytics from readings
-  const analytics = useMemo(() => {
-    if (readings.length === 0) return null;
-
-    // Extract individual metrics
-    const bloodFlowValues = readings.map(r => r.bloodFlow);
-    const temperatureValues = readings.map(r => r.temperature);
-    const pressureValues = readings.map(r => r.pressure);
-    const padRiskScores = readings.map(r => r.padRiskScore);
-
-    // Calculate averages
-    const avgBloodFlow = bloodFlowValues.reduce((sum, val) => sum + val, 0) / bloodFlowValues.length;
-    const avgTemperature = temperatureValues.reduce((sum, val) => sum + val, 0) / temperatureValues.length;
-    const avgPressure = pressureValues.reduce((sum, val) => sum + val, 0) / pressureValues.length;
-    const avgPadRiskScore = padRiskScores.reduce((sum, val) => sum + val, 0) / padRiskScores.length;
-
-    // Calculate mins and maxes
-    const minBloodFlow = Math.min(...bloodFlowValues);
-    const maxBloodFlow = Math.max(...bloodFlowValues);
-    const minTemperature = Math.min(...temperatureValues);
-    const maxTemperature = Math.max(...temperatureValues);
-    const minPressure = Math.min(...pressureValues);
-    const maxPressure = Math.max(...pressureValues);
-    const minPadRiskScore = Math.min(...padRiskScores);
-    const maxPadRiskScore = Math.max(...padRiskScores);
-
-    // Calculate standard deviations
-    const sdBloodFlow = calculateStandardDeviation(bloodFlowValues);
-    const sdTemperature = calculateStandardDeviation(temperatureValues);
-    const sdPressure = calculateStandardDeviation(pressureValues);
-    const sdPadRiskScore = calculateStandardDeviation(padRiskScores);
-
-    // Calculate trends (is the last value higher than the average?)
-    const bloodFlowTrend = latestReading && latestReading.bloodFlow > avgBloodFlow ? "up" : "down";
-    const temperatureTrend = latestReading && latestReading.temperature > avgTemperature ? "up" : "down";
-    const pressureTrend = latestReading && latestReading.pressure > avgPressure ? "up" : "down";
-    const padRiskScoreTrend = latestReading && latestReading.padRiskScore > avgPadRiskScore ? "up" : "down";
-
-    // Generate insights
-    const insights = [];
+  const { readings, loading, isSimulating, setIsSimulating } = useSensorData();
+  const { toast } = useToast();
+  const [timeRange, setTimeRange] = useState<'all' | 'day' | 'week' | 'month'>('all');
+  
+  // Filter readings based on selected time range
+  const filteredReadings = React.useMemo(() => {
+    if (timeRange === 'all') return readings;
     
-    // Blood flow insights
-    if (minBloodFlow < 60) {
-      insights.push({
-        type: "warning",
-        title: "Low Blood Flow Detected",
-        description: "Blood flow dropped below 60 bpm, which may indicate restricted circulation."
-      });
+    const now = Date.now();
+    let cutoff = now;
+    
+    switch (timeRange) {
+      case 'day':
+        cutoff = now - 24 * 60 * 60 * 1000; // 24 hours
+        break;
+      case 'week':
+        cutoff = now - 7 * 24 * 60 * 60 * 1000; // 7 days
+        break;
+      case 'month':
+        cutoff = now - 30 * 24 * 60 * 60 * 1000; // 30 days
+        break;
     }
     
-    // Temperature insights
-    if (maxTemperature - minTemperature > 3) {
-      insights.push({
-        type: "info",
-        title: "Temperature Fluctuations",
-        description: "Significant temperature variations detected, which may indicate circulatory issues."
-      });
+    return readings.filter(reading => reading.timestamp >= cutoff);
+  }, [readings, timeRange]);
+  
+  // Calculate statistics
+  const stats = React.useMemo(() => {
+    if (filteredReadings.length === 0) {
+      return {
+        avgRiskScore: 0,
+        maxRiskScore: 0,
+        minRiskScore: 0,
+        avgBloodFlow: 0,
+        avgTemperature: 0,
+        avgPressure: 0,
+        highRiskCount: 0,
+        moderateRiskCount: 0,
+        lowRiskCount: 0
+      };
     }
     
-    // Pressure insights
-    if (maxPressure > 140) {
-      insights.push({
-        type: "warning",
-        title: "High Pressure Readings",
-        description: "Pressure exceeded 140 mmHg, which may indicate increased vascular resistance."
-      });
-    }
+    const riskScores = filteredReadings.map(r => r.padRiskScore);
+    const bloodFlows = filteredReadings.map(r => r.bloodFlow);
+    const temperatures = filteredReadings.map(r => r.temperature);
+    const pressures = filteredReadings.map(r => r.pressure);
     
-    // PAD risk insights
-    if (maxPadRiskScore > 50) {
-      insights.push({
-        type: "critical",
-        title: "Elevated PAD Risk",
-        description: "PAD risk score exceeded 50, indicating moderate to high risk of peripheral artery disease."
-      });
-    }
-
-    // If we don't have any specific insights but have enough data
-    if (insights.length === 0 && readings.length > 5) {
-      insights.push({
-        type: "info",
-        title: "Normal Readings",
-        description: "All measurements are within normal ranges. Continue monitoring regularly."
-      });
-    }
-
+    const avgRiskScore = riskScores.reduce((a, b) => a + b, 0) / riskScores.length;
+    const avgBloodFlow = bloodFlows.reduce((a, b) => a + b, 0) / bloodFlows.length;
+    const avgTemperature = temperatures.reduce((a, b) => a + b, 0) / temperatures.length;
+    const avgPressure = pressures.reduce((a, b) => a + b, 0) / pressures.length;
+    
     return {
-      averages: { bloodFlow: avgBloodFlow, temperature: avgTemperature, pressure: avgPressure, padRiskScore: avgPadRiskScore },
-      minimums: { bloodFlow: minBloodFlow, temperature: minTemperature, pressure: minPressure, padRiskScore: minPadRiskScore },
-      maximums: { bloodFlow: maxBloodFlow, temperature: maxTemperature, pressure: maxPressure, padRiskScore: maxPadRiskScore },
-      standardDeviations: { bloodFlow: sdBloodFlow, temperature: sdTemperature, pressure: sdPressure, padRiskScore: sdPadRiskScore },
-      trends: { bloodFlow: bloodFlowTrend, temperature: temperatureTrend, pressure: pressureTrend, padRiskScore: padRiskScoreTrend },
-      insights
+      avgRiskScore,
+      maxRiskScore: Math.max(...riskScores),
+      minRiskScore: Math.min(...riskScores),
+      avgBloodFlow,
+      avgTemperature,
+      avgPressure,
+      highRiskCount: riskScores.filter(score => score > 70).length,
+      moderateRiskCount: riskScores.filter(score => score > 30 && score <= 70).length,
+      lowRiskCount: riskScores.filter(score => score <= 30).length
     };
-  }, [readings, latestReading]);
-
-  // Helper function to calculate standard deviation
-  function calculateStandardDeviation(values: number[]): number {
-    const avg = values.reduce((sum, val) => sum + val, 0) / values.length;
-    const squareDiffs = values.map(value => {
-      const diff = value - avg;
-      return diff * diff;
+  }, [filteredReadings]);
+  
+  const handleExportData = () => {
+    // In a real application, this would generate and download a CSV file
+    toast({
+      title: "Data Exported",
+      description: "Your sensor data has been exported successfully."
     });
-    const avgSquareDiff = squareDiffs.reduce((sum, val) => sum + val, 0) / squareDiffs.length;
-    return Math.sqrt(avgSquareDiff);
-  }
-
+  };
+  
   return (
-    <Layout>
-      <div className="space-y-8 animate-fade-in">
-        {/* Header */}
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Analytics & Insights</h1>
+          <h1 className="text-2xl font-bold">Analytics</h1>
           <p className="text-muted-foreground">
-            Advanced analysis of your PAD monitoring data
+            Analyze your PAD monitoring data and trends
           </p>
         </div>
-
-        {analytics ? (
-          <>
-            {/* Risk Score */}
-            <div className="grid grid-cols-1 gap-6">
-              <PadRiskGauge value={analytics.averages.padRiskScore} />
-            </div>
-
-            {/* Insights */}
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold">Key Insights</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {analytics.insights.map((insight, index) => (
-                  <Card key={index} className={`border-l-4 ${
-                    insight.type === "critical" 
-                      ? "border-l-red-500" 
-                      : insight.type === "warning" 
-                        ? "border-l-amber-500" 
-                        : "border-l-blue-500"
-                  }`}>
-                    <CardContent className="p-4 flex gap-4 items-start">
-                      <div className={`p-2 rounded-full ${
-                        insight.type === "critical" 
-                          ? "bg-red-100 text-red-500" 
-                          : insight.type === "warning" 
-                            ? "bg-amber-100 text-amber-500" 
-                            : "bg-blue-100 text-blue-500"
-                      }`}>
-                        <AlertTriangle className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h3 className="font-medium">{insight.title}</h3>
-                        <p className="text-sm text-muted-foreground">{insight.description}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-
-            {/* Statistical Summary */}
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold">Statistical Summary</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base font-medium flex items-center">
-                      <Activity className="mr-2 h-4 w-4 text-primary" />
-                      Blood Flow Statistics
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Average</span>
-                      <span className="font-medium">{analytics.averages.bloodFlow.toFixed(1)} bpm</span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Minimum</span>
-                      <span className="font-medium">{analytics.minimums.bloodFlow.toFixed(1)} bpm</span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Maximum</span>
-                      <span className="font-medium">{analytics.maximums.bloodFlow.toFixed(1)} bpm</span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Standard Deviation</span>
-                      <span className="font-medium">±{analytics.standardDeviations.bloodFlow.toFixed(2)}</span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Current Trend</span>
-                      <span className="flex items-center">
-                        {analytics.trends.bloodFlow === "up" ? (
-                          <ArrowUp className="h-4 w-4 text-green-500 mr-1" />
-                        ) : (
-                          <ArrowDown className="h-4 w-4 text-red-500 mr-1" />
-                        )}
-                        {analytics.trends.bloodFlow === "up" ? "Increasing" : "Decreasing"}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base font-medium flex items-center">
-                      <Thermometer className="mr-2 h-4 w-4 text-primary" />
-                      Temperature Statistics
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Average</span>
-                      <span className="font-medium">{analytics.averages.temperature.toFixed(1)} °C</span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Minimum</span>
-                      <span className="font-medium">{analytics.minimums.temperature.toFixed(1)} °C</span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Maximum</span>
-                      <span className="font-medium">{analytics.maximums.temperature.toFixed(1)} °C</span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Standard Deviation</span>
-                      <span className="font-medium">±{analytics.standardDeviations.temperature.toFixed(2)}</span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Current Trend</span>
-                      <span className="flex items-center">
-                        {analytics.trends.temperature === "up" ? (
-                          <ArrowUp className="h-4 w-4 text-green-500 mr-1" />
-                        ) : (
-                          <ArrowDown className="h-4 w-4 text-red-500 mr-1" />
-                        )}
-                        {analytics.trends.temperature === "up" ? "Increasing" : "Decreasing"}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-
-            {/* Charts */}
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold">Advanced Analytics</h2>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <MetricChart
-                  title="Blood Flow Distribution"
-                  description="Blood flow patterns over time"
-                  data={readings}
-                  dataKey="bloodFlow"
-                  color="#3b82f6"
-                  unit="bpm"
-                />
-                <MetricChart
-                  title="PAD Risk Score Correlation"
-                  description="Risk score evolution with readings"
-                  data={readings}
-                  dataKey="padRiskScore"
-                  color="#f43f5e"
-                  valueFormatter={(value) => value.toFixed(0)}
-                />
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">
-              {loading 
-                ? "Loading analytics data..." 
-                : "No data available for analysis. Please collect more sensor data."}
-            </p>
-          </div>
-        )}
+        
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            className="gap-2"
+            onClick={handleExportData}
+          >
+            <ArrowDownToLine className="w-4 h-4" />
+            Export Data
+          </Button>
+          
+          {readings.length === 0 && (
+            <Button
+              variant={isSimulating ? "destructive" : "default"}
+              className="gap-2"
+              onClick={() => setIsSimulating(!isSimulating)}
+            >
+              {isSimulating ? "Stop Simulation" : "Start Simulation"}
+              <Activity className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
       </div>
-    </Layout>
+
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      ) : readings.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <BarChart3 className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium">No Data Available</h3>
+            <p className="text-muted-foreground text-center max-w-md mt-2">
+              Start the simulation to generate sensor readings and view analytics.
+            </p>
+            <Button 
+              className="mt-6"
+              onClick={() => setIsSimulating(true)}
+            >
+              Start Simulation
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Average Risk Score</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.avgRiskScore.toFixed(1)}</div>
+                <p className="text-xs text-muted-foreground">
+                  Min: {stats.minRiskScore} / Max: {stats.maxRiskScore}
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Average Blood Flow</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.avgBloodFlow.toFixed(1)}%</div>
+                <p className="text-xs text-muted-foreground">
+                  Healthy range: 80-100%
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Average Temperature</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.avgTemperature.toFixed(1)}°C</div>
+                <p className="text-xs text-muted-foreground">
+                  Healthy range: 36-37°C
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Average Pressure</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.avgPressure.toFixed(0)} mmHg</div>
+                <p className="text-xs text-muted-foreground">
+                  Healthy range: 80-120 mmHg
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col md:flex-row justify-between md:items-center">
+                <div>
+                  <CardTitle>PAD Risk Distribution</CardTitle>
+                  <CardDescription>
+                    Risk score distribution across {filteredReadings.length} readings
+                  </CardDescription>
+                </div>
+                
+                <div className="mt-4 md:mt-0">
+                  <div className="flex space-x-1">
+                    <Button
+                      variant={timeRange === 'all' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setTimeRange('all')}
+                    >
+                      All
+                    </Button>
+                    <Button
+                      variant={timeRange === 'day' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setTimeRange('day')}
+                    >
+                      Day
+                    </Button>
+                    <Button
+                      variant={timeRange === 'week' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setTimeRange('week')}
+                    >
+                      Week
+                    </Button>
+                    <Button
+                      variant={timeRange === 'month' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setTimeRange('month')}
+                    >
+                      Month
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <div className="flex flex-col items-center justify-center p-4 rounded-lg bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20">
+                  <div className="text-3xl font-bold text-red-600 dark:text-red-400">
+                    {stats.highRiskCount}
+                  </div>
+                  <div className="text-sm font-medium mt-1">High Risk Readings</div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {((stats.highRiskCount / filteredReadings.length) * 100).toFixed(1)}% of total
+                  </div>
+                </div>
+                
+                <div className="flex flex-col items-center justify-center p-4 rounded-lg bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-100 dark:border-yellow-900/20">
+                  <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+                    {stats.moderateRiskCount}
+                  </div>
+                  <div className="text-sm font-medium mt-1">Moderate Risk Readings</div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {((stats.moderateRiskCount / filteredReadings.length) * 100).toFixed(1)}% of total
+                  </div>
+                </div>
+                
+                <div className="flex flex-col items-center justify-center p-4 rounded-lg bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/20">
+                  <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+                    {stats.lowRiskCount}
+                  </div>
+                  <div className="text-sm font-medium mt-1">Low Risk Readings</div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {((stats.lowRiskCount / filteredReadings.length) * 100).toFixed(1)}% of total
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Tabs defaultValue="riskScore" className="space-y-4">
+            <TabsList className="grid grid-cols-4 gap-4">
+              <TabsTrigger value="riskScore" className="gap-2">
+                <Activity className="w-4 h-4" />
+                Risk Score
+              </TabsTrigger>
+              <TabsTrigger value="bloodFlow" className="gap-2">
+                <Waves className="w-4 h-4" />
+                Blood Flow
+              </TabsTrigger>
+              <TabsTrigger value="temperature" className="gap-2">
+                <ThermometerIcon className="w-4 h-4" />
+                Temperature
+              </TabsTrigger>
+              <TabsTrigger value="pressure" className="gap-2">
+                <Activity className="w-4 h-4" />
+                Pressure
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="riskScore">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Risk Score Trend</CardTitle>
+                  <CardDescription>
+                    Calculated PAD risk scores over time 
+                    {timeRange !== 'all' && ` (Past ${timeRange})`}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[400px]">
+                    <MetricChart 
+                      data={filteredReadings} 
+                      dataKey="padRiskScore" 
+                      color="#ef4444" 
+                      unit="" 
+                      name="Risk Score"
+                      referenceRange={{ min: 0, max: 30, dangerThreshold: 70 }}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="bloodFlow">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Blood Flow Trend</CardTitle>
+                  <CardDescription>
+                    PPG sensor readings over time
+                    {timeRange !== 'all' && ` (Past ${timeRange})`}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[400px]">
+                    <MetricChart 
+                      data={filteredReadings} 
+                      dataKey="bloodFlow" 
+                      color="#3b82f6" 
+                      unit="%" 
+                      name="Blood Flow"
+                      referenceRange={{ min: 70, max: 100 }}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="temperature">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Temperature Trend</CardTitle>
+                  <CardDescription>
+                    Temperature sensor readings over time
+                    {timeRange !== 'all' && ` (Past ${timeRange})`}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[400px]">
+                    <MetricChart 
+                      data={filteredReadings} 
+                      dataKey="temperature" 
+                      color="#ef4444" 
+                      unit="°C" 
+                      name="Temperature"
+                      referenceRange={{ min: 36, max: 37 }}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="pressure">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Pressure Trend</CardTitle>
+                  <CardDescription>
+                    Pressure sensor readings over time
+                    {timeRange !== 'all' && ` (Past ${timeRange})`}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[400px]">
+                    <MetricChart 
+                      data={filteredReadings} 
+                      dataKey="pressure" 
+                      color="#10b981" 
+                      unit="mmHg" 
+                      name="Pressure"
+                      referenceRange={{ min: 80, max: 120 }}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Detailed Readings</CardTitle>
+              <CardDescription>
+                Last {Math.min(10, filteredReadings.length)} sensor readings
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <div className="grid grid-cols-6 bg-muted/50 p-4 text-sm font-medium">
+                  <div>Timestamp</div>
+                  <div>Blood Flow</div>
+                  <div>Temperature</div>
+                  <div>Pressure</div>
+                  <div>Motion (x,y,z)</div>
+                  <div>Risk Score</div>
+                </div>
+                <div className="divide-y">
+                  {filteredReadings.slice(-10).reverse().map((reading, i) => (
+                    <div key={i} className="grid grid-cols-6 p-4 text-sm">
+                      <div>{format(new Date(reading.timestamp), 'MMM d, HH:mm:ss')}</div>
+                      <div>{reading.bloodFlow.toFixed(1)}%</div>
+                      <div>{reading.temperature.toFixed(1)}°C</div>
+                      <div>{reading.pressure.toFixed(0)} mmHg</div>
+                      <div>
+                        {reading.motion.x.toFixed(2)}, {reading.motion.y.toFixed(2)}, {reading.motion.z.toFixed(2)}
+                      </div>
+                      <div 
+                        className={
+                          reading.padRiskScore > 70 
+                            ? 'text-red-500' 
+                            : reading.padRiskScore > 30 
+                              ? 'text-amber-500' 
+                              : 'text-green-500'
+                        }
+                      >
+                        {reading.padRiskScore}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
+    </div>
   );
 };
 
