@@ -6,8 +6,12 @@ import { useSensorData } from '@/contexts/SensorDataContext';
 import { MetricChart } from '@/components/MetricChart';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { Activity, ArrowDownToLine, BarChart3, ThermometerIcon, Waves } from 'lucide-react';
+import { Activity, BarChart3, ThermometerIcon, Waves } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { InfoTooltip } from '@/components/InfoTooltip';
+import { ExportDataDialog } from '@/components/ExportDataDialog';
+import { ConnectDoctorDialog } from '@/components/ConnectDoctorDialog';
+import { MetricsGlossary } from '@/components/MetricsGlossary';
 
 const Analytics = () => {
   const { readings, loading, isSimulating, setIsSimulating } = useSensorData();
@@ -75,14 +79,6 @@ const Analytics = () => {
     };
   }, [filteredReadings]);
   
-  const handleExportData = () => {
-    // In a real application, this would generate and download a CSV file
-    toast({
-      title: "Data Exported",
-      description: "Your sensor data has been exported successfully."
-    });
-  };
-  
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -93,15 +89,14 @@ const Analytics = () => {
           </p>
         </div>
         
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            className="gap-2"
-            onClick={handleExportData}
-          >
-            <ArrowDownToLine className="w-4 h-4" />
-            Export Data
-          </Button>
+        <div className="flex flex-wrap gap-2">
+          {readings.length > 0 && (
+            <>
+              <ExportDataDialog readings={readings} />
+              <ConnectDoctorDialog />
+              <MetricsGlossary />
+            </>
+          )}
           
           {readings.length === 0 && (
             <Button
@@ -141,7 +136,10 @@ const Analytics = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Average Risk Score</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium">Average Risk Score</CardTitle>
+                  <InfoTooltip content="This is your average PAD risk score over the selected time period. Lower scores indicate lower risk of Peripheral Artery Disease." />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.avgRiskScore.toFixed(1)}</div>
@@ -153,7 +151,10 @@ const Analytics = () => {
             
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Average Blood Flow</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium">Average Blood Flow</CardTitle>
+                  <InfoTooltip content="This is your average blood flow reading. Normal blood flow is between 80-100%. Lower values can indicate PAD." />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.avgBloodFlow.toFixed(1)}%</div>
@@ -165,7 +166,10 @@ const Analytics = () => {
             
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Average Temperature</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium">Average Temperature</CardTitle>
+                  <InfoTooltip content="This is your average skin temperature. Normal temperature is between 36-37°C. Lower temperatures in limbs can indicate poor circulation." />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.avgTemperature.toFixed(1)}°C</div>
@@ -177,7 +181,10 @@ const Analytics = () => {
             
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Average Pressure</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium">Average Pressure</CardTitle>
+                  <InfoTooltip content="This is your average blood pressure reading. Normal range is 80-120 mmHg. High pressure can contribute to PAD risk." />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.avgPressure.toFixed(0)} mmHg</div>
@@ -191,12 +198,13 @@ const Analytics = () => {
           <Card>
             <CardHeader>
               <div className="flex flex-col md:flex-row justify-between md:items-center">
-                <div>
+                <div className="flex items-center gap-2">
                   <CardTitle>PAD Risk Distribution</CardTitle>
-                  <CardDescription>
-                    Risk score distribution across {filteredReadings.length} readings
-                  </CardDescription>
+                  <InfoTooltip content="This shows how many of your readings fall into each risk category. More readings in the low risk category is better." />
                 </div>
+                <CardDescription className="md:mt-0">
+                  Risk score distribution across {filteredReadings.length} readings
+                </CardDescription>
                 
                 <div className="mt-4 md:mt-0">
                   <div className="flex space-x-1">
@@ -242,6 +250,9 @@ const Analytics = () => {
                   <div className="text-xs text-muted-foreground mt-1">
                     {((stats.highRiskCount / filteredReadings.length) * 100).toFixed(1)}% of total
                   </div>
+                  <div className="text-xs mt-2">
+                    <InfoTooltip content="Readings with risk score above 70. These suggest significant circulation problems that may indicate PAD. Medical consultation is recommended." />
+                  </div>
                 </div>
                 
                 <div className="flex flex-col items-center justify-center p-4 rounded-lg bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-100 dark:border-yellow-900/20">
@@ -252,6 +263,9 @@ const Analytics = () => {
                   <div className="text-xs text-muted-foreground mt-1">
                     {((stats.moderateRiskCount / filteredReadings.length) * 100).toFixed(1)}% of total
                   </div>
+                  <div className="text-xs mt-2">
+                    <InfoTooltip content="Readings with risk score between 30-70. These suggest some circulation issues that should be monitored. Consider preventative measures." />
+                  </div>
                 </div>
                 
                 <div className="flex flex-col items-center justify-center p-4 rounded-lg bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/20">
@@ -261,6 +275,9 @@ const Analytics = () => {
                   <div className="text-sm font-medium mt-1">Low Risk Readings</div>
                   <div className="text-xs text-muted-foreground mt-1">
                     {((stats.lowRiskCount / filteredReadings.length) * 100).toFixed(1)}% of total
+                  </div>
+                  <div className="text-xs mt-2">
+                    <InfoTooltip content="Readings with risk score below 30. These suggest normal circulation. Continue with healthy lifestyle habits." />
                   </div>
                 </div>
               </div>
@@ -290,7 +307,10 @@ const Analytics = () => {
             <TabsContent value="riskScore">
               <Card>
                 <CardHeader>
-                  <CardTitle>Risk Score Trend</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Risk Score Trend</CardTitle>
+                    <InfoTooltip content="This chart shows your PAD risk score over time. Lower values indicate better circulation health. Watch for upward trends which may indicate worsening condition." />
+                  </div>
                   <CardDescription>
                     Calculated PAD risk scores over time 
                     {timeRange !== 'all' && ` (Past ${timeRange})`}
@@ -314,7 +334,10 @@ const Analytics = () => {
             <TabsContent value="bloodFlow">
               <Card>
                 <CardHeader>
-                  <CardTitle>Blood Flow Trend</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Blood Flow Trend</CardTitle>
+                    <InfoTooltip content="This chart shows your blood flow readings over time. Higher values indicate better circulation. Normal range is 80-100%." />
+                  </div>
                   <CardDescription>
                     PPG sensor readings over time
                     {timeRange !== 'all' && ` (Past ${timeRange})`}
@@ -338,7 +361,10 @@ const Analytics = () => {
             <TabsContent value="temperature">
               <Card>
                 <CardHeader>
-                  <CardTitle>Temperature Trend</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Temperature Trend</CardTitle>
+                    <InfoTooltip content="This chart shows your temperature readings over time. Normal body temperature is around 36.5°C. Lower temperatures in limbs can indicate poor circulation." />
+                  </div>
                   <CardDescription>
                     Temperature sensor readings over time
                     {timeRange !== 'all' && ` (Past ${timeRange})`}
@@ -362,7 +388,10 @@ const Analytics = () => {
             <TabsContent value="pressure">
               <Card>
                 <CardHeader>
-                  <CardTitle>Pressure Trend</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Pressure Trend</CardTitle>
+                    <InfoTooltip content="This chart shows your blood pressure readings over time. Normal range is 80-120 mmHg. High pressure can contribute to PAD risk." />
+                  </div>
                   <CardDescription>
                     Pressure sensor readings over time
                     {timeRange !== 'all' && ` (Past ${timeRange})`}
@@ -386,7 +415,10 @@ const Analytics = () => {
           
           <Card>
             <CardHeader>
-              <CardTitle>Detailed Readings</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Detailed Readings</CardTitle>
+                <InfoTooltip content="This table shows your most recent sensor readings with all measured values. The color of the risk score indicates severity (green=low, yellow=moderate, red=high)." />
+              </div>
               <CardDescription>
                 Last {Math.min(10, filteredReadings.length)} sensor readings
               </CardDescription>

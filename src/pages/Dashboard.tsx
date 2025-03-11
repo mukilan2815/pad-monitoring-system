@@ -10,6 +10,10 @@ import { MetricChart } from '@/components/MetricChart';
 import { format } from 'date-fns';
 import { SensorCard } from '@/components/SensorCard';
 import { useNavigate } from 'react-router-dom';
+import { InfoTooltip } from '@/components/InfoTooltip';
+import { ExportDataDialog } from '@/components/ExportDataDialog';
+import { ConnectDoctorDialog } from '@/components/ConnectDoctorDialog';
+import { MetricsGlossary } from '@/components/MetricsGlossary';
 
 const Dashboard = () => {
   const { readings, latestReading, isSimulating, setIsSimulating, loading } = useSensorData();
@@ -27,24 +31,31 @@ const Dashboard = () => {
           <p className="text-muted-foreground">Here's your PAD monitoring overview</p>
         </div>
         
-        <Button 
-          variant={isSimulating ? "destructive" : "default"}
-          className="gap-2"
-          onClick={() => setIsSimulating(!isSimulating)}
-        >
-          {isSimulating ? (
-            <>Stop Simulation <AlertCircle className="w-4 h-4" /></>
-          ) : (
-            <>Start Simulation <Activity className="w-4 h-4" /></>
-          )}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button 
+            variant={isSimulating ? "destructive" : "default"}
+            className="gap-2"
+            onClick={() => setIsSimulating(!isSimulating)}
+          >
+            {isSimulating ? (
+              <>Stop Simulation <AlertCircle className="w-4 h-4" /></>
+            ) : (
+              <>Start Simulation <Activity className="w-4 h-4" /></>
+            )}
+          </Button>
+          
+          <MetricsGlossary />
+        </div>
       </div>
 
       {/* Risk Score Card */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         <Card className="col-span-1 md:col-span-2 xl:col-span-1 shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium">Current PAD Risk Score</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-medium">Current PAD Risk Score</CardTitle>
+              <InfoTooltip content="This score (0-100) indicates your risk of Peripheral Artery Disease. Lower is better. It's calculated based on blood flow, temperature, and pressure readings." />
+            </div>
             <CardDescription>
               Based on latest sensor readings from {latestReading ? format(new Date(latestReading.timestamp), 'MMMM d, h:mm a') : 'N/A'}
             </CardDescription>
@@ -100,7 +111,10 @@ const Dashboard = () => {
         {/* Current Metrics */}
         <Card className="shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium">Current Metrics</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-medium">Current Metrics</CardTitle>
+              <InfoTooltip content="These are your latest sensor readings. Normal ranges: Blood Flow (80-100%), Temperature (36-37°C), Pressure (80-120 mmHg)." />
+            </div>
             <CardDescription>Latest sensor readings</CardDescription>
           </CardHeader>
           <CardContent>
@@ -175,10 +189,13 @@ const Dashboard = () => {
         {/* Alert Card */}
         <Card className={`shadow-sm ${highRiskReadings.length > 0 ? 'border-red-300 bg-red-50/50 dark:bg-red-900/10' : ''}`}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium flex items-center gap-2">
-              {highRiskReadings.length > 0 && <AlertCircle className="text-red-500 w-5 h-5" />}
-              Health Alerts
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-medium flex items-center gap-2">
+                {highRiskReadings.length > 0 && <AlertCircle className="text-red-500 w-5 h-5" />}
+                Health Alerts
+              </CardTitle>
+              <InfoTooltip content="This section shows important health alerts based on your sensor data. High-risk readings indicate possible PAD symptoms that may require medical attention." />
+            </div>
             <CardDescription>Important notifications based on your data</CardDescription>
           </CardHeader>
           <CardContent>
@@ -197,7 +214,7 @@ const Dashboard = () => {
                         {highRiskReadings.length} high-risk readings in the last {readings.length} measurements.
                         Consider consulting with your healthcare provider.
                       </p>
-                      <div className="mt-3">
+                      <div className="mt-3 flex gap-2">
                         <Button 
                           size="sm" 
                           variant="destructive"
@@ -207,6 +224,7 @@ const Dashboard = () => {
                           View Details
                           <ArrowRight className="w-3 h-3" />
                         </Button>
+                        <ConnectDoctorDialog />
                       </div>
                     </div>
                   </div>
@@ -227,6 +245,10 @@ const Dashboard = () => {
                 <p className="text-sm text-muted-foreground mt-1 max-w-md">
                   Your recent measurements show no signs of high PAD risk. Continue monitoring and maintain healthy habits.
                 </p>
+                <div className="flex gap-2 mt-4">
+                  <ConnectDoctorDialog />
+                  <ExportDataDialog readings={readings} />
+                </div>
               </div>
             ) : (
               <div className="text-center py-8">
@@ -247,7 +269,10 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium">Blood Flow Trend</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-medium">Blood Flow Trend</CardTitle>
+              <InfoTooltip content="This chart shows your blood flow readings over time. Higher values (80-100%) indicate better circulation in your lower limbs." />
+            </div>
             <CardDescription>PPG sensor readings over time</CardDescription>
           </CardHeader>
           <CardContent>
@@ -282,7 +307,10 @@ const Dashboard = () => {
         
         <Card className="shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium">PAD Risk Score Trend</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-medium">PAD Risk Score Trend</CardTitle>
+              <InfoTooltip content="This chart shows your PAD risk score over time. Lower values indicate lower risk of Peripheral Artery Disease." />
+            </div>
             <CardDescription>Calculated risk assessment over time</CardDescription>
           </CardHeader>
           <CardContent>
